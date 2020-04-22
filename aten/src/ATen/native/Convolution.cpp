@@ -677,17 +677,11 @@ at::Tensor _convolution(
           params.padding, params.stride, params.dilation, params.groups, params.benchmark, params.deterministic);
     }
   } else if (params.use_mkldnn(input)) {
-    TORCH_CHECK(input.options().type_equal(weight.options())
-                || (input.is_mkldnn() && weight.scalar_type() == kFloat),
-             "Input type (", input.toString(), ") and weight type (", weight.toString(),
-             ") should be the same");
-    TORCH_CHECK(!bias.defined() || (input.options().type_equal(bias.options()))
-                || (input.is_mkldnn() && bias.scalar_type() == kFloat),
-             "Input type (", input.toString(), ") and bias type (", bias.toString(),
-             ") should be the same");
     if (params.transposed) {
       if (!input_is_mkldnn) {
-        output = at::mkldnn_convolution_transpose(input.contiguous(), weight.contiguous(), bias.defined() ? bias.contiguous() : bias,
+        output = at::mkldnn_convolution_transpose(input.contiguous(),
+            weight.is_mkldnn() ? weight : weight.contiguous(),
+            bias.defined() && !bias.is_mkldnn() ? bias.contiguous() : bias,
             params.padding, params.output_padding, params.stride, params.dilation, params.groups);
       } else {
         // do not call contiguous on mkldnn tensor
@@ -696,8 +690,10 @@ at::Tensor _convolution(
       }
     } else {
       if (!input_is_mkldnn) {
-        output = at::mkldnn_convolution(input.contiguous(), weight.contiguous(), bias.defined() ? bias.contiguous() : bias,
-                                        params.padding, params.stride, params.dilation, params.groups);
+        output = at::mkldnn_convolution(input.contiguous(),
+            weight.is_mkldnn() ? weight: weight.contiguous(),
+            bias.defined() && !bias.is_mkldnn() ? bias.contiguous() : bias,
+            params.padding, params.stride, params.dilation, params.groups);
       } else {
         // do not call contiguous on mkldnn tensor
         output = at::mkldnn_convolution(input, weight, bias,
