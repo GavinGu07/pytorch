@@ -75,17 +75,24 @@ class DeQuantize(torch.nn.Module):
         self.register_buffer("dequantize_lut", torch.zeros([256]))
         self.lut_validate = False
     def forward(self, Xq):
-        #return Xq.dequantize()
+        if not torch.get_lut_enabled():
+            # print("disable_lut")
+            return Xq.dequantize()
+        # print("enable_lut")
         if not self.lut_validate:
-           mapping_table=[]
-           act_scale = Xq.q_scale()
-           act_zp = Xq.q_zero_point()
-           for i in range(0, 256):
-             self.dequantize_lut[i] = (i - act_zp) * act_scale
-           self.lut_validate = True
+            mapping_table = []
+            act_scale = Xq.q_scale()
+            act_zp = Xq.q_zero_point()
+            for i in range(0, 256):
+                self.dequantize_lut[i] = (i - act_zp) * act_scale
+            self.lut_validate = True
         return torch.quantized_elmentwise_helper(Xq, self.dequantize_lut, self.scale, self.zero_point, True)
     @staticmethod
     def from_float(mod):
+        if not torch.get_lut_enabled():
+            # print("disable_lut_convert")
+            return DeQuantize()
+        # # print("enable_lut_convert")
         activation_post_process = mod.activation_post_process
         act_scale, act_zp = activation_post_process.calculate_qparams()
         dequant = DeQuantize()

@@ -98,5 +98,17 @@ Tensor& zero_(Tensor &self) {
   return self.fill_(0);
 }
 
+void set_lut_enabled(bool self){
+  if (self) at::globalContext().setUserEnabledLUT(true);
+  else at::globalContext().setUserEnabledLUT(false);
+  return;
+}
+
+bool get_lut_enabled(){
+  if (at::globalContext().userEnabledLUT()) return true;
+  else return false;
+}
+
+
 } // namespace native
 } // namespace at

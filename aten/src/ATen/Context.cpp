@@ -43,6 +43,14 @@ void Context::setUserEnabledCuDNN(bool e) {
   enabled_cudnn = e;
 }
 
+bool Context::userEnabledLUT() const {
+  return enabled_lut;
+}
+
+void Context::setUserEnabledLUT(bool e) {
+  enabled_lut = e;
+}
+
 bool Context::userEnabledMkldnn() const {
   return enabled_mkldnn;
 }

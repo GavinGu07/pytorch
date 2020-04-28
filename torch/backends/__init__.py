@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 import types
+import torch
 # The idea for this parameter is that we forbid bare assignment
 # to torch.backends.<cudnn|mkldnn>.enabled and friends when running our
 # test suite, where it's very easy to forget to undo the change
@@ -45,3 +46,15 @@ class PropModule(types.ModuleType):
 
     def __getattr__(self, attr):
         return self.m.__getattribute__(attr)
+
+class SetLUTEnabled():
+    def __init__(self, enable):
+        self.enable = enable
+
+    def __enter__(self):
+        torch.set_lut_enabled(self.enable)
+        return
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        torch.set_lut_enabled(False)
+
