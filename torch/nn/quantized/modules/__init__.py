@@ -76,9 +76,7 @@ class DeQuantize(torch.nn.Module):
         self.lut_validate = False
     def forward(self, Xq):
         if not torch.get_lut_enabled():
-            # print("disable_lut")
             return Xq.dequantize()
-        # print("enable_lut")
         if not self.lut_validate:
             mapping_table = []
             act_scale = Xq.q_scale()
@@ -90,9 +88,7 @@ class DeQuantize(torch.nn.Module):
     @staticmethod
     def from_float(mod):
         if not torch.get_lut_enabled():
-            # print("disable_lut_convert")
             return DeQuantize()
-        # # print("enable_lut_convert")
         activation_post_process = mod.activation_post_process
         act_scale, act_zp = activation_post_process.calculate_qparams()
         dequant = DeQuantize()

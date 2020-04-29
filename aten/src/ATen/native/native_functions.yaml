@@ -1472,7 +1472,7 @@
 - func: set_lut_enabled(bool self) -> ()
   use_c10_dispatcher: unboxed_only
 
-- func: get_lut_enabled() -> bool flag
+- func: get_lut_enabled() -> bool
   use_c10_dispatcher: unboxed_only
 
 - func: index.Tensor(Tensor self, Tensor?[] indices) -> Tensor
