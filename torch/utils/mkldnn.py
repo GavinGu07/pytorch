@@ -189,7 +189,7 @@ class MkldnnBatchNorm(torch.jit.ScriptModule):
         )
 
 
-def to_mkldnn(module, dtype=torch.float):
+def to_mkldnn(module, dtype=torch.float, only_conv=False):
     def m_fn(m, d):
         if isinstance(m, torch.nn.Linear):
             return MkldnnLinear(m, d)
@@ -202,10 +202,21 @@ def to_mkldnn(module, dtype=torch.float):
         else:
             return m
 
-    def m_fn_rec(m, d):
-        new_m = m_fn(m, d)
+    def m_fn_conv(m, d):
+        if isinstance(m, torch.nn.Conv2d):
+            return MkldnnConv2d(m, d)
+        elif isinstance(m, torch.nn.Conv3d):
+            return MkldnnConv3d(m, d)
+        else:
+            return m
+
+    def m_fn_rec(m, d, only_conv):
+        if only_conv:
+            new_m = m_fn_conv(m, d)
+        else:
+            new_m = m_fn(m, d)
         for name, sub_m in m.named_children():
-            setattr(new_m, name, m_fn_rec(sub_m, d))
+            setattr(new_m, name, m_fn_rec(sub_m, d, only_conv))
         return new_m
 
-    return m_fn_rec(module, dtype)
+    return m_fn_rec(module, dtype, only_conv)
